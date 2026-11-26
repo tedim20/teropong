@@ -14,12 +14,13 @@ on:
         description: 'Target Platform'
         required: false
         type: choice
-        default: 'macos-latest'
+        default: 'macos-15-intel'
         options:
           - 'all'
           - 'ubuntu-22.04'
           - 'windows-latest'
           - 'macos-latest'
+          - 'macos-15-intel'
 
 permissions:
   contents: write
@@ -32,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ (github.event_name == 'workflow_dispatch' && inputs.platform != 'all' && inputs.platform != '') && fromJSON(format('["{0}"]', inputs.platform)) || fromJSON('["macos-latest"]') }}
+        platform: ${{ (github.event_name == 'workflow_dispatch' && inputs.platform != 'all' && inputs.platform != '') && fromJSON(format('["{0}"]', inputs.platform)) || fromJSON('["macos-15-intel"]') }}
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -49,6 +50,10 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          # Runner Mac Intel dipakai karena antrean Apple Silicon sering penuh;
+          # hasil build tetap untuk Apple Silicon lewat cross-compile.
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -91,7 +96,13 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: 1
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: npm run tauri -- build
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            npm run tauri -- build --target aarch64-apple-darwin
+          else
+            npm run tauri -- build
+          fi
 
       - name: Upload build artifacts as workflow artifacts
         uses: actions/upload-artifact@v4
@@ -99,6 +110,7 @@ jobs:
           name: trawangan-bundle-${{ matrix.platform }}
           path: |
             src-tauri/target/release/bundle/**
+            src-tauri/target/aarch64-apple-darwin/release/bundle/**
           if-no-files-found: ignore
 
   publish:
