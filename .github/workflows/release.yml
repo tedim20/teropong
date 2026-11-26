@@ -98,6 +98,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         shell: bash
         run: |
+          # Buang baris baru/spasi tersembunyi yang sering ikut saat menyalin secret
+          export TAURI_SIGNING_PRIVATE_KEY="$(printf '%s' "$TAURI_SIGNING_PRIVATE_KEY" | tr -d '\r\n\t ')"
+          export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(printf '%s' "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" | tr -d '\r\n\t ')"
           if [[ "$RUNNER_OS" == "macOS" ]]; then
             npm run tauri -- build --target aarch64-apple-darwin
           else

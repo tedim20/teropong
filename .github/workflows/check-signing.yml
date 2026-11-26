@@ -1,0 +1,32 @@
+name: cek kunci update
+
+# Membandingkan GitHub Secrets dengan sidik jari (SHA-256) berkas kunci lokal.
+# Hanya mencetak COCOK / TIDAK COCOK dan panjangnya; isi secret tidak pernah ditampilkan.
+on: workflow_dispatch
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bandingkan secret dengan berkas kunci
+        env:
+          K: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          P: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          KEY_SHA=c9a7a260c28c8715; KEY_LEN=348
+          PW_SHA=809555f85c341a89;  PW_LEN=43
+          sha() { printf '%s' "$1" | sha256sum | cut -c1-16; }
+          clean() { printf '%s' "$1" | tr -d '\r\n\t '; }
+          chk() {
+            local name="$1" val="$2" want_sha="$3" want_len="$4"
+            if [ -z "$val" ]; then echo "$name: KOSONG / tidak terbaca"; return; fi
+            if [ "$(sha "$val")" = "$want_sha" ]; then echo "$name: COCOK"; return; fi
+            if [ "$(sha "$(clean "$val")")" = "$want_sha" ]; then
+              echo "$name: COCOK setelah spasi/baris baru tersembunyi dibuang (panjang tersimpan ${#val}, seharusnya $want_len)"; return; fi
+            echo "$name: TIDAK COCOK (panjang ${#val}, seharusnya $want_len)"
+          }
+          chk TAURI_SIGNING_PRIVATE_KEY "$K" "$KEY_SHA" "$KEY_LEN"
+          chk TAURI_SIGNING_PRIVATE_KEY_PASSWORD "$P" "$PW_SHA" "$PW_LEN"
+          [ "$(sha "$(clean "$K")")" = "$PW_SHA" ] && echo "PERINGATAN: isi kunci dan password tertukar"
+          [ "$(sha "$(clean "$P")")" = "$KEY_SHA" ] && echo "PERINGATAN: isi kunci dan password tertukar"
+          true
