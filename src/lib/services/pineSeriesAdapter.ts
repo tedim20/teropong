@@ -368,8 +368,12 @@ export function createPineFetchSeriesAdapter(
 
     if (loadedFromSqlite && loadedFromSqlite.length > 0) {
       const bars = loadedFromSqlite.map(toOHLCVBar);
-      inMemoryCache.set(cacheKey, { fetchedAt: now, bars });
-      return applyRangeBounds(bars, range);
+      const bounded = applyRangeBounds(bars, range);
+      // Cache SQLite tidak punya batas kedaluwarsa: bila tidak mencakup rentang yang diminta, ambil ulang dari jaringan
+      if (bounded.length > 0) {
+        inMemoryCache.set(cacheKey, { fetchedAt: now, bars });
+        return bounded;
+      }
     }
 
     // ─── 3. Fallback Jaringan Market Feed / Universal Fetch (Tier 3) ───
@@ -412,6 +416,46 @@ export function createPineFetchSeriesAdapter(
 /**
  * Mesin Worker Pine yang di-hardening untuk Trawangan dengan injeksi fetchSeries inter-simbol
  */
+/**
+ * Mengambil series lewat gateway data chart milik Vela (`req.fetchSeries` = feed provider chart).
+ * Timeframe intraday non-native (mis. "40" = 8 x 5m) diambil dalam interval dasar lalu digabung.
+ */
+export async function fetchViaChartGateway(
+  gateway: FetchSeriesHandler,
+  symbol: string,
+  timeframe: string,
+  range?: FetchSeriesRange
+): Promise<OHLCVBar[]> {
+  const plan = planIntradayResample(normalizeSeriesTimeframe(timeframe));
+  if (!plan) {
+    const bars = await gateway(symbol, timeframe, range);
+    return Array.isArray(bars) ? bars : [];
+  }
+  const baseMinutes = plan.targetMinutes / plan.factor;
+  const baseRange: FetchSeriesRange | undefined = range
+    ? { ...range, ...(typeof range.limit === 'number' ? { limit: Math.min(5000, range.limit * plan.factor) } : {}) }
+    : undefined;
+  const baseBars = await gateway(symbol, String(baseMinutes), baseRange);
+  if (!Array.isArray(baseBars) || baseBars.length === 0) return [];
+  const candles: Candle[] = baseBars.map((b: any) => ({
+    time: Number(b.time),
+    open: Number(b.open),
+    high: Number(b.high),
+    low: Number(b.low),
+    close: Number(b.close),
+    volume: Number(b.volume ?? 0),
+  }));
+  return resampleIntradayCandles(candles, plan.targetMinutes).map(toOHLCVBar);
+}
+
+/**
+ * Mesin Worker Pine yang di-hardening untuk Trawangan dengan injeksi fetchSeries inter-simbol.
+ *
+ * Urutan sumber data untuk `request.security`:
+ *  1. Gateway data chart milik Vela (feed provider yang sama dengan chart, terbukti memuat candle).
+ *  2. Adapter kustom (cache SQLite / market feed) sebagai cadangan.
+ * Bila keduanya kosong, peringatan dikirim ke konsol Pine agar tidak gagal diam-diam.
+ */
 export class TrawanganPineWorkerEngine extends PineWorkerEngine {
   private readonly customFetchSeries?: FetchSeriesHandler;
 
@@ -419,29 +463,65 @@ export class TrawanganPineWorkerEngine extends PineWorkerEngine {
     super(opts);
     this.customFetchSeries = opts?.fetchSeries;
 
-    // Pasang interceptor pada handler internal serveFetch untuk menangani request.security
-    if (this.customFetchSeries) {
-      const origServeFetch = (this as any).serveFetch?.bind(this);
-      (this as any).serveFetch = async (
-        reqId: number,
-        symbol: string,
-        timeframe: string,
-        range?: any
-      ): Promise<void> => {
+    (this as any).serveFetch = async (
+      reqId: number,
+      symbol: string,
+      timeframe: string,
+      range?: any
+    ): Promise<void> => {
+      let bars: OHLCVBar[] = [];
+      let lastError: unknown = null;
+
+      const gateway = this.findChartGateway();
+      if (gateway) {
         try {
-          const bars = await this.customFetchSeries!(symbol, timeframe, range);
-          (this as any).post?.({ kind: 'fetchSeriesResult', reqId, bars });
-        } catch (err: any) {
-          if (origServeFetch) {
-            return origServeFetch(reqId, symbol, timeframe, range);
-          }
-          (this as any).post?.({
-            kind: 'fetchSeriesResult',
-            reqId,
-            error: err instanceof Error ? err.message : String(err),
-          });
+          bars = await fetchViaChartGateway(gateway, symbol, timeframe, range);
+        } catch (err) {
+          lastError = err;
         }
-      };
+      }
+
+      if (bars.length === 0 && this.customFetchSeries) {
+        try {
+          bars = await this.customFetchSeries(symbol, timeframe, range);
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (!Array.isArray(bars) || bars.length === 0) {
+        const detail = lastError instanceof Error ? `: ${lastError.message}` : '';
+        this.broadcastWarning(`request.security: tidak ada data untuk ${symbol} @ ${timeframe}${detail}`);
+        bars = [];
+      }
+
+      (this as any).post?.({ kind: 'fetchSeriesResult', reqId, bars });
+    };
+  }
+
+  /**
+   * Gateway `fetchSeries` yang disuntikkan Vela ke sesi aktif (bukan adapter kustom kita).
+   */
+  private findChartGateway(): FetchSeriesHandler | undefined {
+    const sessions: Map<unknown, any> | undefined = (this as any).sessions;
+    if (!sessions || typeof sessions.values !== 'function') return undefined;
+    for (const s of sessions.values()) {
+      const fn = s?.req?.fetchSeries;
+      if (typeof fn === 'function' && fn !== this.customFetchSeries) return fn as FetchSeriesHandler;
+    }
+    return undefined;
+  }
+
+  private broadcastWarning(message: string): void {
+    console.warn(`[TrawanganPineWorkerEngine] ${message}`);
+    const sessions: Map<unknown, any> | undefined = (this as any).sessions;
+    if (!sessions || typeof sessions.values !== 'function') return;
+    for (const s of sessions.values()) {
+      try {
+        s?.handlers?.onWarning?.({ message, method: 'request.security', bar: 0 });
+      } catch {
+        // abaikan handler yang gagal
+      }
     }
   }
 

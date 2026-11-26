@@ -1,6 +1,6 @@
 [package]
 name = "tauri-app"
-version = "0.58.2"
+version = "0.58.3"
 description = "A Tauri App"
 authors = ["Kaleksanan Barqi Aji Massani"]
 license = "Apache-2.0"

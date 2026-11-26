@@ -82,3 +82,61 @@ test('fetchSeries timeframe native tetap diambil langsung (perilaku lama)', asyn
   await fetchSeries('BINANCE:BTCUSDT', '15');
   assert.deepEqual(calls, ['15m']);
 });
+
+import { fetchViaChartGateway, TrawanganPineWorkerEngine, toOHLCVBar } from '../src/lib/services/pineSeriesAdapter';
+
+const fakeWorker = () => ({ postMessage() {}, addEventListener() {}, terminate() {} });
+
+test('fetchViaChartGateway: 40 diambil sebagai 5 dari gateway chart lalu digabung', async () => {
+  const calls: Array<{ tf: string; limit?: number }> = [];
+  const gateway = async (_s: string, tf: string, range?: any) => {
+    calls.push({ tf, limit: range?.limit });
+    return fiveMin(16).map(toOHLCVBar);
+  };
+  const bars = await fetchViaChartGateway(gateway, 'BTCUSDT', '40', { limit: 100 });
+  assert.deepEqual(calls, [{ tf: '5', limit: 800 }]);
+  assert.equal(bars.length, 2);
+  assert.equal(bars[0].open, 100);
+  assert.equal(bars[0].close, 107.25);
+});
+
+test('fetchViaChartGateway: timeframe native diteruskan apa adanya', async () => {
+  const calls: string[] = [];
+  await fetchViaChartGateway(async (_s, tf) => { calls.push(tf); return []; }, 'BTCUSDT', '15');
+  assert.deepEqual(calls, ['15']);
+});
+
+function engineWithSession(gateway: any, custom: any) {
+  const posted: any[] = [];
+  const warnings: any[] = [];
+  const engine = new TrawanganPineWorkerEngine({ createWorker: fakeWorker as any, fetchSeries: custom });
+  (engine as any).post = (m: any) => posted.push(m);
+  (engine as any).sessions = new Map([[1, { req: { fetchSeries: gateway }, handlers: { onWarning: (w: any) => warnings.push(w) } }]]);
+  return { engine, posted, warnings };
+}
+
+test('serveFetch memakai gateway data chart lebih dulu', async () => {
+  let customCalled = false;
+  const { engine, posted, warnings } = engineWithSession(
+    async () => fiveMin(3).map(toOHLCVBar),
+    async () => { customCalled = true; return []; }
+  );
+  await (engine as any).serveFetch(7, 'BTCUSDT', '15', { limit: 10 });
+  assert.equal(customCalled, false);
+  assert.equal(posted[0].reqId, 7);
+  assert.equal(posted[0].bars.length, 3);
+  assert.equal(warnings.length, 0);
+});
+
+test('serveFetch jatuh ke adapter kustom bila gateway kosong, dan memberi peringatan bila keduanya kosong', async () => {
+  const a = engineWithSession(async () => [], async () => fiveMin(2).map(toOHLCVBar));
+  await (a.engine as any).serveFetch(1, 'BTCUSDT', '15');
+  assert.equal(a.posted[0].bars.length, 2);
+  assert.equal(a.warnings.length, 0);
+
+  const b = engineWithSession(async () => { throw new Error('feed mati'); }, async () => []);
+  await (b.engine as any).serveFetch(2, 'BTCUSDT', '40');
+  assert.deepEqual(b.posted[0].bars, []);
+  assert.equal(b.warnings.length, 1);
+  assert.match(b.warnings[0].message, /BTCUSDT @ 40/);
+});

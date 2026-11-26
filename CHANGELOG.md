@@ -5,6 +5,15 @@ Format penulisan mengacu pada standar [Keep a Changelog](https://keepachangelog.
 
 ---
 
+## [0.58.3] - 2026-11-27
+
+### 🐛 Diperbaiki (Fixed)
+- **`request.security` di dalam aplikasi selalu kosong (`pineSeriesAdapter.ts`):**
+  - Permintaan data dari Pine kini lebih dulu dilayani gateway data chart milik Vela (provider yang sama dengan chart, mis. Bitunix), baru jatuh ke adapter cache/jaringan bila kosong. Sebelumnya interceptor worker melewati gateway itu sehingga semua `request.security` mengembalikan NaN di aplikasi.
+  - Timeframe intraday non-native lewat gateway chart disusun dari interval dasar (mis. 40 = 8 x 5m). Sebelumnya provider Bitunix diam-diam mengganti timeframe yang tidak dikenal menjadi 1h.
+  - Bila data tetap kosong, peringatan muncul di konsol Pine (`request.security: tidak ada data untuk ...`) alih-alih gagal diam-diam.
+  - Cache SQLite yang tidak mencakup rentang waktu yang diminta kini diabaikan dan data diambil ulang dari jaringan.
+
 ## [0.58.2] - 2026-11-26
 
 ### 🐛 Diperbaiki (Fixed)
