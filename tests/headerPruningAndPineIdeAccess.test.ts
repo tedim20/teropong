@@ -34,7 +34,7 @@ describe('Tiket #165: Header Chrome Pruning, ActionsMenu, HelpTab & Pelestarian 
       // Brand badge utama tetap terjaga di TopTabBar (sub-komponen Header)
       const topTabBarContent = readProjectFile('src/lib/components/header/TopTabBar.svelte');
       assert.match(topTabBarContent, /class="brand-badge"/);
-      assert.match(topTabBarContent, /class="brand-title">trawangan<\/span>/);
+      assert.match(topTabBarContent, /class="brand-title">Teropong<\/span>/);
     });
 
     test('Header.svelte menghapus props mati, impor ikon tak terpakai, dan aturan CSS symbol-section duplikat sambil menjaga .active-sym-title', () => {

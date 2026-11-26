@@ -87,11 +87,11 @@
   <!-- Hero Brand Showcase Card -->
   <div class="about-hero-card">
     <div class="about-logo-frame">
-      <img src="/logo-icon.svg" alt="trawangan logo" class="about-logo-img" />
+      <img src="/logo-icon.svg" alt="Teropong logo" class="about-logo-img" />
     </div>
     <div class="about-hero-details">
       <div class="about-title-row">
-        <h3 class="about-app-name">trawangan</h3>
+        <h3 class="about-app-name">Teropong</h3>
         <span class="about-version-badge mono-nums">v{updateState.currentVersion} · {$tr('Stabil Pol', 'Stabil', 'Stable')}</span>
         {#if envLabel}
           <span class="about-env-badge mono-nums" title={$tr('Paket sistem sing kedeteksi', 'Lingkungan paket terdeteksi', 'Detected package environment')}>{envLabel}</span>
@@ -502,7 +502,7 @@
       <button
         type="button"
         class="about-link-card"
-        onclick={() => openExternalUrl('https://github.com/KaleksananBarqi/trawangan')}
+        onclick={() => openExternalUrl('https://github.com/tedim20/teropong')}
       >
         <div class="link-card-left">
           <ExternalLink size={14} class="text-cyan" />
@@ -517,7 +517,7 @@
       <button
         type="button"
         class="about-link-card"
-        onclick={() => openExternalUrl('https://github.com/KaleksananBarqi/trawangan/releases')}
+        onclick={() => openExternalUrl('https://github.com/tedim20/teropong/releases')}
       >
         <div class="link-card-left">
           <RefreshCw size={14} class="text-bull" />

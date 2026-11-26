@@ -99,7 +99,7 @@ describe('Penghapusan End-to-End Browser Bridge & Smart Clipboard Watcher (#169)
     assert.match(cargoToml, /tauri-plugin-notification/);
 
     const tauriConf = JSON.parse(readRepoFile('src-tauri/tauri.conf.json'));
-    assert.equal(tauriConf.productName, 'trawangan');
+    assert.equal(tauriConf.productName, 'Teropong');
     assert.equal(tauriConf.plugins?.['deep-link'], undefined);
     assert.ok(Array.isArray(tauriConf.app?.windows));
     assert.equal(tauriConf.app?.windows?.[0]?.label, 'main');

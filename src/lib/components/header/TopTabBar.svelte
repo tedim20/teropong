@@ -98,9 +98,9 @@
 
 <div class="top-tab-bar">
   <div class="top-bar-left">
-    <div class="brand-badge" title="trawangan · Professional Crypto Charting Terminal">
-      <img src="/no background.svg" alt="trawangan logo" class="brand-logo-img" />
-      <span class="brand-title">trawangan</span>
+    <div class="brand-badge" title="Teropong · Terminal Charting">
+      <img src="/no background.svg" alt="Teropong logo" class="brand-logo-img" />
+      <span class="brand-title">Teropong</span>
     </div>
 
     <div class="tabs-strip" role="tablist" aria-label="Quick Chart Tabs">

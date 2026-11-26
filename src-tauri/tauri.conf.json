@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "trawangan",
+  "productName": "Teropong",
   "version": "0.58.1",
-  "identifier": "com.trawangan.app",
+  "identifier": "com.tedim20.teropong",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "trawangan · Crypto Charting Terminal",
+        "title": "Teropong · Terminal Charting",
         "width": 1360,
         "height": 860,
         "minWidth": 960,
@@ -38,23 +38,26 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "shortDescription": "Native Crypto Charting Desktop App",
-    "longDescription": "Ultra-lightweight crypto charting application powered by LuxAlgo Vela and PineTS",
-    "publisher": "Trawangan",
-    "copyright": "Copyright 2026 Trawangan",
+    "shortDescription": "Terminal charting desktop (fork dari trawangan)",
+    "longDescription": "Teropong: terminal charting berbasis trawangan (github.com/KaleksananBarqi/trawangan), ditenagai LuxAlgo Vela dan PineTS",
+    "publisher": "tedim20",
+    "copyright": "Berbasis trawangan © 2026 Kaleksanan Barqi Aji Massani · Apache-2.0",
     "windows": {
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["English", "Indonesian"],
+        "languages": [
+          "English",
+          "Indonesian"
+        ],
         "displayLanguageSelector": false
       }
     }
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU5OURBMzc1MjdCM0QyMzgKUldRNDByTW5kYU9kNlZyellZNXpXTW56S29hYUJLdGF6b1MzdmtQcE1RQ0d2SUxrUHllSmlqZ0UK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEzMURFODgzNjdDN0IzMDQKUldRRXM4ZG5nK2dkbzJBc1AxNFlZS29LZVNSaDQwVmpTZXBKMXBkUFVZUDkyZ2ZMZUlFM09PcmMK",
       "endpoints": [
-        "https://github.com/KaleksananBarqi/trawangan/releases/latest/download/latest.json"
+        "https://github.com/tedim20/teropong/releases/latest/download/latest.json"
       ]
     }
   }

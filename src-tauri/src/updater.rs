@@ -9,7 +9,7 @@ use std::process::{Command, Stdio};
 use std::time::Instant;
 use tauri::{AppHandle, Emitter};
 
-const ALLOWED_RELEASE_PREFIX: &str = "https://github.com/KaleksananBarqi/trawangan/releases/download/";
+const ALLOWED_RELEASE_PREFIX: &str = "https://github.com/tedim20/teropong/releases/download/";
 const UPDATE_STAGING_DIR: &str = "trawangan-updates";
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -311,7 +311,7 @@ pub fn detect_install_environment() -> InstallEnvironment {
 /// Memvalidasi URL rilis resmi GitHub trawangan untuk mencegah pengunduhan dari host sembarangan.
 pub(crate) fn validate_release_url(url: &str) -> Result<(), String> {
     if !url.starts_with(ALLOWED_RELEASE_PREFIX) {
-        return Err("URL rilis tidak berasal dari repositori resmi trawangan.".to_string());
+        return Err("URL rilis tidak berasal dari repositori resmi Teropong.".to_string());
     }
     Ok(())
 }
@@ -627,7 +627,7 @@ pub async fn install_linux_package_and_relaunch(
 
     Ok(InstallPackageResult {
         status: InstallResultStatus::Relaunching,
-        message: "Pembaruan berhasil dipasang. Membuka ulang trawangan...".into(),
+        message: "Pembaruan berhasil dipasang. Membuka ulang Teropong...".into(),
     })
 }
 
@@ -658,7 +658,7 @@ INVALIDHASH  trawangan_0.49.0_amd64.AppImage
     #[test]
     fn test_validate_release_url_and_filename() {
         assert!(validate_release_url(
-            "https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan-0.49.0-1.x86_64.rpm"
+            "https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan-0.49.0-1.x86_64.rpm"
         )
         .is_ok());
         assert!(validate_release_url("https://evil.example.com/trawangan.rpm").is_err());

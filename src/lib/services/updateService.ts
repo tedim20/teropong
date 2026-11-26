@@ -51,10 +51,10 @@ export type {
   UpdateStrategy,
 };
 
-const RELEASE_API_URL = 'https://api.github.com/repos/KaleksananBarqi/trawangan/releases/latest';
-const RELEASE_DOWNLOAD_BASE = 'https://github.com/KaleksananBarqi/trawangan/releases/download';
-const RELEASE_TAG_BASE = 'https://github.com/KaleksananBarqi/trawangan/releases/tag';
-const LATEST_MANIFEST_URL = 'https://github.com/KaleksananBarqi/trawangan/releases/latest/download/latest.json';
+const RELEASE_API_URL = 'https://api.github.com/repos/tedim20/teropong/releases/latest';
+const RELEASE_DOWNLOAD_BASE = 'https://github.com/tedim20/teropong/releases/download';
+const RELEASE_TAG_BASE = 'https://github.com/tedim20/teropong/releases/tag';
+const LATEST_MANIFEST_URL = 'https://github.com/tedim20/teropong/releases/latest/download/latest.json';
 const PERIODIC_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 export interface TauriUpdateHandle {
@@ -344,7 +344,7 @@ export class UpdateService {
       latestTag,
       releaseName: data.name || latestTag,
       releaseNotes: data.body || 'Tidak ada catatan rilis.',
-      releaseUrl: data.html_url || 'https://github.com/KaleksananBarqi/trawangan/releases/latest',
+      releaseUrl: data.html_url || 'https://github.com/tedim20/teropong/releases/latest',
       publishedAt: formatReleaseDate(data.published_at),
       isUpdateAvailable,
       assets,

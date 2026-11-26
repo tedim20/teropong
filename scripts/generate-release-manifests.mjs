@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const RELEASE_DOWNLOAD_BASE = 'https://github.com/KaleksananBarqi/trawangan/releases/download';
+const RELEASE_DOWNLOAD_BASE = 'https://github.com/tedim20/teropong/releases/download';
 
 const INSTALLER_EXTENSIONS = ['.exe', '.msi', '.dmg', '.app.tar.gz', '.AppImage', '.deb', '.rpm'];
 

@@ -1,4 +1,18 @@
 ================================================================================
+TEROPONG - DERIVATIVE WORK NOTICE
+================================================================================
+
+Teropong (https://github.com/tedim20/teropong) is a modified derivative of
+trawangan, distributed under the Apache License, Version 2.0.
+
+Based on trawangan (https://github.com/KaleksananBarqi/trawangan), Created by Kaleksanan Barqi Aji Massani
+
+Changes made in this derivative: application name, bundle identifier, app icon
+and logo, update/release endpoints, and macOS-only release workflow. Teropong
+does not use the "trawangan" name, monogram logo or official visual marks to
+promote itself. All original notices below are retained unchanged.
+
+================================================================================
 PART I - TRAWANGAN MANDATORY ATTRIBUTION NOTICE
 ================================================================================
 

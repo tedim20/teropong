@@ -1,4 +1,4 @@
-name: release trawangan
+name: release Teropong
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
         description: 'Target Platform'
         required: false
         type: choice
-        default: 'all'
+        default: 'macos-latest'
         options:
           - 'all'
           - 'ubuntu-22.04'
@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ (github.event_name == 'workflow_dispatch' && inputs.platform != 'all' && inputs.platform != '') && fromJSON(format('["{0}"]', inputs.platform)) || fromJSON('["windows-latest", "ubuntu-22.04", "macos-latest"]') }}
+        platform: ${{ (github.event_name == 'workflow_dispatch' && inputs.platform != 'all' && inputs.platform != '') && fromJSON(format('["{0}"]', inputs.platform)) || fromJSON('["macos-latest"]') }}
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -155,7 +155,7 @@ jobs:
             const tag = process.env.TAG;
             const notes = fs.readFileSync("release-notes.txt", "utf8").trim();
             const body = [
-              `## ꦠꦿꦮꦔꦤ꧀ · trawangan ${tag}`,
+              `## Teropong ${tag}`,
               "",
               "> **Professional Desktop Crypto Charting Terminal — Zero Paywall**",
               "",
@@ -170,12 +170,10 @@ jobs:
               "- **Engine:** LuxAlgo Vela WebGL2 akselerasi GPU (60-120 FPS).",
               "",
               "### 📦 Paket Installer Biner Resmi:",
-              "- **Windows**: `.exe` (NSIS Setup) & `.msi`",
-              "- **Linux**: `.rpm` (Fedora/RHEL/openSUSE), `.deb` (Debian/Ubuntu), & `.AppImage` (Universal Linux)",
               "- **macOS**: `.dmg` & `.app` (Apple Silicon)",
               "",
               "---",
-              "*Filosofi: Penerawangan (ꦠꦿꦮꦔꦤ꧀) — Visi menembus kabut manipulasi pasar.*"
+              "*Based on [trawangan](https://github.com/KaleksananBarqi/trawangan), Created by Kaleksanan Barqi Aji Massani · Apache-2.0*"
             ].join("\n");
             fs.writeFileSync("release-body.md", body + "\n", "utf8");
           '
@@ -187,7 +185,7 @@ jobs:
           TAG="${{ steps.tag_info.outputs.tag }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist-release/* --clobber
-            gh release edit "$TAG" --title "trawangan $TAG" --notes-file release-body.md
+            gh release edit "$TAG" --title "Teropong $TAG" --notes-file release-body.md
           else
-            gh release create "$TAG" dist-release/* --title "trawangan $TAG" --notes-file release-body.md
+            gh release create "$TAG" dist-release/* --title "Teropong $TAG" --notes-file release-body.md
           fi

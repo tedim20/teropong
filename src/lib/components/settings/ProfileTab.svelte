@@ -302,7 +302,7 @@
       <div class="attribution-left">
         <!-- Logo Resmi Aplikasi -->
         <div class="app-logo-box">
-          <img src="/static/logo.png" alt="trawangan" class="app-logo-img" onerror={(e) => {
+          <img src="/static/logo.png" alt="Teropong" class="app-logo-img" onerror={(e) => {
             (e.currentTarget as HTMLElement).style.display = 'none';
           }} />
           <span class="app-logo-fallback"></span>
@@ -338,7 +338,7 @@
           {/if}
         {:else}
           <!-- Fallback Brand Bawaan trawangan -->
-          <span class="bar-brand-name">trawangan</span>
+          <span class="bar-brand-name">Teropong</span>
         {/if}
 
         <span class="bar-separator">·</span>

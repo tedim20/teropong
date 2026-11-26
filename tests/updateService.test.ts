@@ -23,42 +23,42 @@ const SAMPLE_ASSETS: ReleaseAsset[] = [
   {
     name: 'trawangan-0.49.0-1.x86_64.rpm',
     browserDownloadUrl:
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan-0.49.0-1.x86_64.rpm',
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan-0.49.0-1.x86_64.rpm',
     size: 7_000_000,
     kind: classifyAssetKind('trawangan-0.49.0-1.x86_64.rpm'),
   },
   {
     name: 'trawangan-0.49.0-1.aarch64.rpm',
     browserDownloadUrl:
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan-0.49.0-1.aarch64.rpm',
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan-0.49.0-1.aarch64.rpm',
     size: 6_800_000,
     kind: classifyAssetKind('trawangan-0.49.0-1.aarch64.rpm'),
   },
   {
     name: 'trawangan_0.49.0_amd64.deb',
     browserDownloadUrl:
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan_0.49.0_amd64.deb',
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan_0.49.0_amd64.deb',
     size: 7_000_000,
     kind: classifyAssetKind('trawangan_0.49.0_amd64.deb'),
   },
   {
     name: 'trawangan_0.49.0_amd64.AppImage',
     browserDownloadUrl:
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan_0.49.0_amd64.AppImage',
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan_0.49.0_amd64.AppImage',
     size: 85_000_000,
     kind: classifyAssetKind('trawangan_0.49.0_amd64.AppImage'),
   },
   {
     name: 'trawangan_0.49.0_x64-setup.exe',
     browserDownloadUrl:
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan_0.49.0_x64-setup.exe',
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan_0.49.0_x64-setup.exe',
     size: 5_000_000,
     kind: classifyAssetKind('trawangan_0.49.0_x64-setup.exe'),
   },
   {
     name: 'trawangan_0.49.0_aarch64.dmg',
     browserDownloadUrl:
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan_0.49.0_aarch64.dmg',
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan_0.49.0_aarch64.dmg',
     size: 5_500_000,
     kind: classifyAssetKind('trawangan_0.49.0_aarch64.dmg'),
   },
@@ -73,7 +73,7 @@ function createMockFetchRelease(tagName = 'v0.49.0'): typeof fetch {
         tag_name: tagName,
         name: `trawangan ${tagName}`,
         body: 'Pembaruan sistem in-app updater.',
-        html_url: `https://github.com/KaleksananBarqi/trawangan/releases/tag/${tagName}`,
+        html_url: `https://github.com/tedim20/teropong/releases/tag/${tagName}`,
         published_at: '2026-11-14T16:00:00Z',
         assets: SAMPLE_ASSETS.map((a) => ({
           name: a.name,
@@ -239,7 +239,7 @@ describe('Update Service & Semver Logic Unit Tests', () => {
       latestTag: 'v0.49.0',
       releaseName: 'v0.49.0',
       releaseNotes: 'notes',
-      releaseUrl: 'https://github.com/KaleksananBarqi/trawangan/releases/tag/v0.49.0',
+      releaseUrl: 'https://github.com/tedim20/teropong/releases/tag/v0.49.0',
       publishedAt: '2026-11-14',
       isUpdateAvailable: true,
       assets: SAMPLE_ASSETS,
@@ -417,7 +417,7 @@ describe('Update Service & Semver Logic Unit Tests', () => {
     assert.equal(manifest.platforms['windows-x86_64'].signature, 'SIG_WIN');
     assert.equal(
       manifest.platforms['linux-x86_64'].url,
-      'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.49.0/trawangan_0.49.0_amd64.AppImage'
+      'https://github.com/tedim20/teropong/releases/download/v0.49.0/trawangan_0.49.0_amd64.AppImage'
     );
     assert.equal(manifest.platforms['darwin-aarch64'].signature, 'SIG_MAC');
 
@@ -446,7 +446,7 @@ describe('Update Service & Semver Logic Unit Tests', () => {
               tag_name: 'v0.99.0',
               name: 'trawangan v0.99.0',
               body: 'Rilis uji ETag',
-              html_url: 'https://github.com/KaleksananBarqi/trawangan/releases/tag/v0.99.0',
+              html_url: 'https://github.com/tedim20/teropong/releases/tag/v0.99.0',
               published_at: '2026-11-15T10:00:00Z',
               assets: [],
             }),
@@ -508,7 +508,7 @@ describe('Update Service & Semver Logic Unit Tests', () => {
               pub_date: '2026-11-15T11:21:22.690Z',
               platforms: {
                 'linux-x86_64': {
-                  url: 'https://github.com/KaleksananBarqi/trawangan/releases/download/v0.51.0/trawangan_0.51.0_amd64.AppImage',
+                  url: 'https://github.com/tedim20/teropong/releases/download/v0.51.0/trawangan_0.51.0_amd64.AppImage',
                   signature: 'SIG',
                 },
               },
