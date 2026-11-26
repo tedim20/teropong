@@ -258,6 +258,66 @@ async function defaultMarketNetworkFetcher(
 }
 
 /**
+ * Interval intraday (dalam menit) yang tersedia langsung di bursa (Binance, Bitunix, dsb.).
+ */
+const NATIVE_INTRADAY_MINUTES = [1, 3, 5, 15, 30, 60, 120, 240, 360, 480, 720];
+
+/**
+ * Mengubah timeframe intraday ternormalisasi menjadi menit ("40m" -> 40, "2h" -> 120); null bila bukan menit/jam.
+ */
+export function intradayTimeframeMinutes(tf: string): number | null {
+  const match = /^(\d+)(m|h)$/.exec((tf || '').trim());
+  if (!match) return null;
+  const n = Number(match[1]);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return match[2] === 'h' ? n * 60 : n;
+}
+
+/**
+ * Untuk timeframe intraday yang tidak tersedia di bursa (mis. "40m" dari Pine `5 x 8`),
+ * memilih interval native terbesar yang membaginya habis. Null bila timeframe sudah native
+ * atau tidak bisa disusun dari interval native.
+ */
+export function planIntradayResample(
+  tf: string
+): { baseInterval: string; factor: number; targetMinutes: number } | null {
+  const minutes = intradayTimeframeMinutes(tf);
+  if (minutes === null || NATIVE_INTRADAY_MINUTES.includes(minutes)) return null;
+  const base = [...NATIVE_INTRADAY_MINUTES].reverse().find((b) => b < minutes && minutes % b === 0);
+  if (!base) return null;
+  const baseInterval = base % 60 === 0 ? `${base / 60}h` : `${base}m`;
+  return { baseInterval, factor: minutes / base, targetMinutes: minutes };
+}
+
+/**
+ * Menggabungkan candle kecil menjadi candle N menit. Bucket disejajarkan ke tengah malam UTC
+ * setiap hari, sama seperti TradingView untuk pasar 24 jam (bucket terakhir hari itu bisa lebih pendek).
+ */
+export function resampleIntradayCandles(candles: Candle[], targetMinutes: number): Candle[] {
+  if (!Array.isArray(candles) || candles.length === 0 || targetMinutes <= 0) return [];
+  const spanMs = targetMinutes * 60_000;
+  const dayMs = 86_400_000;
+  const sorted = [...candles].sort((a, b) => a.time - b.time);
+  const out: Candle[] = [];
+  let current: Candle | null = null;
+  for (const c of sorted) {
+    const dayStart = Math.floor(c.time / dayMs) * dayMs;
+    const bucket = dayStart + Math.floor((c.time - dayStart) / spanMs) * spanMs;
+    if (!current || current.time !== bucket) {
+      if (current) out.push(current);
+      current = { time: bucket, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume ?? 0 };
+    } else {
+      current.high = Math.max(current.high, c.high);
+      current.low = Math.min(current.low, c.low);
+      current.close = c.close;
+      current.volume = (current.volume ?? 0) + (c.volume ?? 0);
+    }
+  }
+  if (current) out.push(current);
+  return out;
+}
+
+/**
  * Membangun adapter fungsi `fetchSeries` bertipe kuat untuk PineWorkerEngine
  */
 export function createPineFetchSeriesAdapter(
@@ -316,7 +376,15 @@ export function createPineFetchSeriesAdapter(
     const lookupSymbol = `${parsed.providerId}:${parsed.cleanSymbol}`;
     let fetchedCandles: Candle[] = [];
     try {
-      fetchedCandles = await networkFetcher(lookupSymbol, exchangeInterval, requiredLimit);
+      const resamplePlan = planIntradayResample(tf);
+      if (resamplePlan) {
+        // Timeframe non-native (mis. 40m): ambil interval native lalu gabungkan sendiri
+        const baseLimit = Math.min(1000, requiredLimit * resamplePlan.factor);
+        const baseCandles = await networkFetcher(lookupSymbol, resamplePlan.baseInterval, baseLimit);
+        fetchedCandles = resampleIntradayCandles(baseCandles, resamplePlan.targetMinutes);
+      } else {
+        fetchedCandles = await networkFetcher(lookupSymbol, exchangeInterval, requiredLimit);
+      }
     } catch (err) {
       console.warn(`[PineSeriesAdapter] Network fetcher gagal untuk ${lookupSymbol}:`, err);
       fetchedCandles = [];

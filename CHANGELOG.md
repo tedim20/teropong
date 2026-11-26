@@ -5,6 +5,12 @@ Format penulisan mengacu pada standar [Keep a Changelog](https://keepachangelog.
 
 ---
 
+## [0.58.2] - 2026-11-26
+
+### 🐛 Diperbaiki (Fixed)
+- **Timeframe non-native untuk `request.security` (`pineSeriesAdapter.ts`):**
+  - Timeframe intraday yang tidak tersedia di bursa (mis. `40m` dari script Pine "chart 5m x 8") sekarang disusun dari interval native terbesar yang membaginya habis (40m = 8 x 5m), dengan candle disejajarkan ke tengah malam UTC seperti TradingView. Sebelumnya interval mentah dikirim ke bursa, ditolak, dan `request.security` mengembalikan data kosong sehingga sinyal tidak pernah muncul. Timeframe native tetap diambil langsung seperti sebelumnya.
+
 ## [0.58.1] - 2026-11-25
 
 ### 🐛 Diperbaiki (Fixed)
