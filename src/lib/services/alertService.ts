@@ -5,6 +5,7 @@ import { playAlertChime, playSuccessPip } from './soundService';
 import {
   dispatchExternalAlertNotifications,
   sendDesktopAlertNotification,
+  setDesktopNotificationSoundEnabled,
   type NotificationChannelsConfig,
 } from './systemNotificationService';
 import { roundToTickSize } from './priceSnapService';
@@ -48,6 +49,8 @@ class AlertService {
 
   public setSoundEnabled(enabled: boolean) {
     this.soundEnabled = enabled;
+    // Notifikasi desktop macOS ikut bersuara (suara sistem) sesuai toggle yang sama
+    setDesktopNotificationSoundEnabled(enabled);
   }
 
   public isSoundEnabled(): boolean {

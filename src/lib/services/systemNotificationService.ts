@@ -80,6 +80,19 @@ export interface DesktopNotificationPayload {
   title: string;
   body: string;
   icon?: string;
+  /** Nama suara sistem (macOS: "Glass", "Ping", ...). Default mengikuti pengaturan suara notifikasi. */
+  sound?: string;
+}
+
+/** Suara sistem untuk notifikasi desktop; null = tanpa suara. Disetel oleh toggle "Notification Sound Chime". */
+let desktopNotificationSound: string | null = 'Glass';
+
+export function setDesktopNotificationSoundEnabled(enabled: boolean): void {
+  desktopNotificationSound = enabled ? 'Glass' : null;
+}
+
+export function getDesktopNotificationSound(): string | null {
+  return desktopNotificationSound;
 }
 
 /**
@@ -92,10 +105,12 @@ export async function sendDesktopNotification(payload: DesktopNotificationPayloa
   }
 
   try {
+    const sound = payload.sound ?? desktopNotificationSound ?? undefined;
     sendNotification({
       title: payload.title,
       body: payload.body,
       icon: payload.icon,
+      ...(sound ? { sound } : {}),
     });
     return true;
   } catch (err) {

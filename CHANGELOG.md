@@ -5,6 +5,13 @@ Format penulisan mengacu pada standar [Keep a Changelog](https://keepachangelog.
 
 ---
 
+## [0.58.5] - 2026-11-27
+
+### 🐛 Diperbaiki (Fixed)
+- **Suara notifikasi tidak berbunyi di macOS (`soundService.ts`, `systemNotificationService.ts`, `alertService.ts`):**
+  - WebKit (WKWebView) menahan AudioContext yang dibuat di luar interaksi pengguna dalam status suspended, sehingga chime alert diputar tanpa suara. Konteks audio kini dibuka pada klik/tombol/sentuhan pertama, dan nada hanya dirender setelah konteks berstatus running.
+  - Notifikasi desktop macOS kini memakai suara sistem ("Glass") mengikuti toggle Notification Sound Chime, sebagai cadangan bila audio aplikasi belum terbuka.
+
 ## [0.58.4] - 2026-11-27
 
 ### 🐛 Diperbaiki (Fixed)
