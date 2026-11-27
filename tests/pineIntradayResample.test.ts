@@ -140,3 +140,55 @@ test('serveFetch jatuh ke adapter kustom bila gateway kosong, dan memberi pering
   assert.equal(b.warnings.length, 1);
   assert.match(b.warnings[0].message, /BTCUSDT @ 40/);
 });
+
+import { instrumentKey, deriveFromChartBars } from '../src/lib/services/pineSeriesAdapter';
+
+test('instrumentKey menyamakan simbol tanpa prefix bursa & sufiks perpetual', () => {
+  assert.equal(instrumentKey('XAUUSDT'), 'XAUUSDT');
+  assert.equal(instrumentKey('XAUUSDT.P'), 'XAUUSDT');
+  assert.equal(instrumentKey('BITUNIX:XAUUSDT.P'), 'XAUUSDT');
+  assert.equal(instrumentKey('btcusdt-perp'), 'BTCUSDT');
+  assert.equal(instrumentKey('BTCUSDT;heikinashi'), null);
+  assert.equal(instrumentKey(''), null);
+});
+
+test('deriveFromChartBars: 40m dari chart 5m simbol yang sama', () => {
+  const chart = fiveMin(16);
+  const bars = deriveFromChartBars('XAUUSDT.P', '5', chart, 'XAUUSDT', '40');
+  assert.ok(bars);
+  assert.equal(bars!.length, 2);
+  assert.equal(bars![0].open, 100);
+  assert.equal(bars![0].close, 107.25);
+  assert.equal(bars![0].high, 107.5);
+});
+
+test('deriveFromChartBars menolak simbol lain, timeframe lebih kecil, atau bukan kelipatan', () => {
+  const chart = fiveMin(16);
+  assert.equal(deriveFromChartBars('XAUUSDT.P', '5', chart, 'BTCUSDT', '40'), null);
+  assert.equal(deriveFromChartBars('XAUUSDT.P', '5', chart, 'XAUUSDT', '1'), null);
+  assert.equal(deriveFromChartBars('XAUUSDT.P', '5', chart, 'XAUUSDT', '12'), null);
+  assert.equal(deriveFromChartBars('XAUUSDT.P', '5', [], 'XAUUSDT', '40'), null);
+  // timeframe sama -> candle chart apa adanya
+  assert.equal(deriveFromChartBars('XAUUSDT.P', '5', chart, 'XAUUSDT', '5')!.length, 16);
+});
+
+test('serveFetch memakai candle chart lebih dulu tanpa menyentuh gateway/jaringan', async () => {
+  let gatewayCalled = false;
+  let customCalled = false;
+  const posted: any[] = [];
+  const engine = new TrawanganPineWorkerEngine({ createWorker: fakeWorker as any, fetchSeries: async () => { customCalled = true; return []; } });
+  (engine as any).post = (m: any) => posted.push(m);
+  (engine as any).sessions = new Map([[1, {
+    req: {
+      market: { symbol: 'XAUUSDT.P', timeframe: '5' },
+      getBars: () => fiveMin(16),
+      fetchSeries: async () => { gatewayCalled = true; return []; },
+    },
+    handlers: {},
+  }]]);
+  await (engine as any).serveFetch(9, 'XAUUSDT', '40', { from: 0, to: Date.now() });
+  assert.equal(gatewayCalled, false);
+  assert.equal(customCalled, false);
+  assert.equal(posted[0].reqId, 9);
+  assert.equal(posted[0].bars.length, 2);
+});

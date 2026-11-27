@@ -5,6 +5,13 @@ Format penulisan mengacu pada standar [Keep a Changelog](https://keepachangelog.
 
 ---
 
+## [0.58.4] - 2026-11-27
+
+### 🐛 Diperbaiki (Fixed)
+- **`request.security` untuk simbol chart sendiri disusun dari candle chart (`pineSeriesAdapter.ts`):**
+  - Bila simbol yang diminta Pine sama dengan simbol chart (mis. `XAUUSDT` vs `XAUUSDT.P`) dan timeframe-nya kelipatan timeframe chart (8 = 8 x 1m, 40 = 8 x 5m, 120 = 8 x 15m), series disusun langsung dari candle chart tanpa jaringan. Sebelumnya permintaan dikirim tanpa provider dan gagal untuk XAUUSDT.P di Bitunix (data kosong, sinyal tidak muncul).
+  - Jalur gateway Vela dan adapter cache/jaringan tetap menjadi cadangan untuk simbol lain.
+
 ## [0.58.3] - 2026-11-27
 
 ### 🐛 Diperbaiki (Fixed)

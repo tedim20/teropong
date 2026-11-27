@@ -449,11 +449,59 @@ export async function fetchViaChartGateway(
 }
 
 /**
+ * Kunci instrumen untuk membandingkan simbol permintaan Pine dengan simbol chart:
+ * tanpa prefix bursa, tanpa sufiks perpetual (.P / -PERP / PERP), huruf besar.
+ * Mengembalikan null untuk ticker ber-modifier (mis. ";heikinashi").
+ */
+export function instrumentKey(symbol: string | undefined | null): string | null {
+  if (!symbol || typeof symbol !== 'string') return null;
+  if (symbol.includes(';')) return null;
+  let s = symbol.trim();
+  if (s.includes(':')) s = s.slice(s.lastIndexOf(':') + 1);
+  s = s.replace(/(\.P|-PERP|PERP)$/i, '').toUpperCase();
+  return s || null;
+}
+
+/**
+ * Menyusun series timeframe lebih tinggi langsung dari candle chart bila simbolnya sama
+ * dan timeframe yang diminta adalah kelipatan timeframe chart (mis. chart 5m -> 40m = 8 x 5m).
+ * Tidak butuh jaringan: datanya persis sama dengan yang tampil di chart.
+ */
+export function deriveFromChartBars(
+  chartSymbol: string,
+  chartTimeframe: string,
+  chartBars: any[] | undefined,
+  symbol: string,
+  timeframe: string
+): OHLCVBar[] | null {
+  if (!Array.isArray(chartBars) || chartBars.length === 0) return null;
+  const want = instrumentKey(symbol);
+  if (!want || want !== instrumentKey(chartSymbol)) return null;
+  const chartMin = intradayTimeframeMinutes(normalizeSeriesTimeframe(chartTimeframe));
+  const targetMin = intradayTimeframeMinutes(normalizeSeriesTimeframe(timeframe));
+  if (!chartMin || !targetMin || targetMin < chartMin || targetMin % chartMin !== 0) return null;
+  const candles: Candle[] = chartBars
+    .map((b: any) => ({
+      time: Number(b.time),
+      open: Number(b.open),
+      high: Number(b.high),
+      low: Number(b.low),
+      close: Number(b.close),
+      volume: Number(b.volume ?? 0),
+    }))
+    .filter((c) => Number.isFinite(c.time) && Number.isFinite(c.close));
+  if (candles.length === 0) return null;
+  const bars = targetMin === chartMin ? candles : resampleIntradayCandles(candles, targetMin);
+  return bars.map(toOHLCVBar);
+}
+
+/**
  * Mesin Worker Pine yang di-hardening untuk Trawangan dengan injeksi fetchSeries inter-simbol.
  *
  * Urutan sumber data untuk `request.security`:
- *  1. Gateway data chart milik Vela (feed provider yang sama dengan chart, terbukti memuat candle).
- *  2. Adapter kustom (cache SQLite / market feed) sebagai cadangan.
+ *  1. Candle chart itu sendiri, bila simbolnya sama dan timeframe-nya kelipatan timeframe chart.
+ *  2. Gateway data chart milik Vela (feed provider chart).
+ *  3. Adapter kustom (cache SQLite / market feed) sebagai cadangan.
  * Bila keduanya kosong, peringatan dikirim ke konsol Pine agar tidak gagal diam-diam.
  */
 export class TrawanganPineWorkerEngine extends PineWorkerEngine {
@@ -472,7 +520,20 @@ export class TrawanganPineWorkerEngine extends PineWorkerEngine {
       let bars: OHLCVBar[] = [];
       let lastError: unknown = null;
 
-      const gateway = this.findChartGateway();
+      // 1. Simbol sama dengan chart & timeframe kelipatan: susun dari candle chart (tanpa jaringan)
+      for (const session of this.activeSessions()) {
+        const req = session?.req;
+        if (!req?.market) continue;
+        const chartBars = typeof req.getBars === 'function' ? req.getBars() : req.bars;
+        const derived = deriveFromChartBars(req.market.symbol, req.market.timeframe, chartBars, symbol, timeframe);
+        if (derived && derived.length > 0) {
+          bars = derived;
+          break;
+        }
+      }
+
+      // 2. Gateway data chart milik Vela, 3. adapter kustom
+      const gateway = bars.length === 0 ? this.findChartGateway() : undefined;
       if (gateway) {
         try {
           bars = await fetchViaChartGateway(gateway, symbol, timeframe, range);
@@ -497,6 +558,12 @@ export class TrawanganPineWorkerEngine extends PineWorkerEngine {
 
       (this as any).post?.({ kind: 'fetchSeriesResult', reqId, bars });
     };
+  }
+
+  private activeSessions(): any[] {
+    const sessions: Map<unknown, any> | undefined = (this as any).sessions;
+    if (!sessions || typeof sessions.values !== 'function') return [];
+    return [...sessions.values()];
   }
 
   /**
